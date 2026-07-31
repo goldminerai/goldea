@@ -1,0 +1,28 @@
+# MetaTrader generated binaries and logs
+*.ex4
+*.ex5
+*.log
+*.tmp
+MQL5/Tester/
+MQL4/Tester/
+
+# Local secrets and machine-specific settings
+secrets*.py
+*.secret
+*.pem
+*.key
+.env
+.env.*
+
+# OS/editor files
+Thumbs.db
+Desktop.ini
+.vscode/
+
+# Local archive copied from the PC/Claude workspace; never push this folder
+_local_archive/
+data/private/
+
+# Current EA source copies contain embedded deployment credentials; keep local
+src/mt5/*.mq4
+src/mt5/*.mq5
