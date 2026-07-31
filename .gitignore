@@ -26,3 +26,8 @@ data/private/
 # Current EA source copies contain embedded deployment credentials; keep local
 src/mt5/*.mq4
 src/mt5/*.mq5
+
+# Generated backtest data and reports
+incoming_backtests/
+data/backtests/
+reports/
