@@ -24,8 +24,13 @@ _local_archive/
 data/private/
 
 # Current EA source copies contain embedded deployment credentials; keep local
-src/mt5/*.mq4
-src/mt5/*.mq5
+# (src/ 전체 재귀 — antguard 등 하위 폴더 mq5 에도 동일 시크릿이 박혀 있음)
+src/**/*.mq4
+src/**/*.mq5
+
+# Generated caches / active agent copy (agents/ 가 정본)
+tools/__pycache__/
+.claude/
 
 # Generated backtest data and reports
 incoming_backtests/

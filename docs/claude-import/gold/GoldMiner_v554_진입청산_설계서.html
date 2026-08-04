@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GoldMiner v5.5.4 — 진입·청산 전략 설계서</title>
+<style>
+:root{
+  --bg:#0e0e0d; --surface:#1a1a19; --surface2:#232321; --line:#33322e;
+  --ink:#f4f3ee; --ink2:#c3c2b7; --ink3:#8b8a80;
+  --gold:#c98500; --gold-b:#eda100; --gold-d:#3a2a05;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#9085e9;
+  --ok:#199e70; --warn:#c98500; --bad:#d95926; --crit:#e0454b;
+  --mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  font-size:15px; line-height:1.75; letter-spacing:-.01em;
+}
+.wrap{max-width:1180px;margin:0 auto;padding:0 28px 120px}
+
+/* ── 표지 ── */
+.cover{padding:88px 0 56px;border-bottom:1px solid var(--line)}
+.eyebrow{font:600 12px/1 var(--mono);letter-spacing:.22em;color:var(--gold);text-transform:uppercase}
+.cover h1{font-size:46px;line-height:1.15;margin:20px 0 14px;font-weight:800;letter-spacing:-.03em}
+.cover h1 em{font-style:normal;color:var(--gold-b)}
+.cover .sub{color:var(--ink2);font-size:17px;max-width:64ch}
+.meta{display:flex;gap:28px;flex-wrap:wrap;margin-top:28px;font:500 13px/1.6 var(--mono);color:var(--ink3)}
+.meta b{color:var(--ink2);font-weight:600}
+
+/* ── 목차 ── */
+nav.toc{margin:40px 0 0;padding:22px 26px;background:var(--surface);border:1px solid var(--line);border-radius:14px}
+nav.toc h2{font-size:12px;letter-spacing:.16em;color:var(--gold);margin:0 0 14px;font-family:var(--mono)}
+nav.toc ol{margin:0;padding-left:20px;columns:2;column-gap:40px}
+nav.toc li{margin:5px 0}
+nav.toc a{color:var(--ink2);text-decoration:none;border-bottom:1px solid transparent}
+nav.toc a:hover{color:var(--gold-b);border-bottom-color:var(--gold)}
+
+/* ── 섹션 ── */
+section{padding-top:72px}
+h2.sec{font-size:13px;font-family:var(--mono);letter-spacing:.18em;color:var(--gold);margin:0 0 8px;text-transform:uppercase}
+h3.title{font-size:31px;font-weight:800;margin:0 0 10px;letter-spacing:-.025em}
+.lede{color:var(--ink2);max-width:72ch;margin:0 0 30px;font-size:16px}
+h4{font-size:19px;font-weight:700;margin:38px 0 12px;letter-spacing:-.015em}
+h5{font-size:15px;font-weight:700;margin:24px 0 8px;color:var(--gold-b)}
+p{margin:0 0 14px;max-width:78ch}
+
+/* ── 카드/그리드 ── */
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(2,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+.g5{grid-template-columns:repeat(5,1fr)}
+@media(max-width:860px){.g2,.g3,.g4,.g5{grid-template-columns:1fr}nav.toc ol{columns:1}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 20px}
+.card h6{margin:0 0 8px;font-size:13px;font-family:var(--mono);letter-spacing:.08em;color:var(--gold)}
+.card p{font-size:14px;color:var(--ink2);margin:0}
+
+/* ── 스탯 타일 ── */
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.tile .lbl{font:600 11px/1.4 var(--mono);letter-spacing:.1em;color:var(--ink3);text-transform:uppercase}
+.tile .val{font:700 27px/1.15 var(--mono);color:var(--gold-b);margin:6px 0 2px;letter-spacing:-.02em}
+.tile .val.sm{font-size:20px}
+.tile .note{font-size:12px;color:var(--ink3);line-height:1.5}
+
+/* ── 표 ── */
+table{width:100%;border-collapse:collapse;margin:14px 0 20px;font-size:13.5px}
+th,td{text-align:left;padding:9px 11px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:600 11.5px/1.4 var(--mono);letter-spacing:.08em;color:var(--gold);text-transform:uppercase;
+   border-bottom:1px solid var(--gold-d);white-space:nowrap}
+td.n,th.n{text-align:right;font-family:var(--mono)}
+tbody tr:hover{background:#ffffff06}
+code{font-family:var(--mono);font-size:.9em;background:var(--surface2);
+     border:1px solid var(--line);border-radius:4px;padding:1px 5px;color:var(--gold-b);white-space:nowrap}
+td code{font-size:.86em}
+pre{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--gold);
+    border-radius:8px;padding:14px 16px;overflow-x:auto;font-family:var(--mono);
+    font-size:12.5px;line-height:1.65;color:var(--ink2);margin:12px 0 18px}
+pre b{color:var(--gold-b);font-weight:600}
+pre i{color:var(--ink3);font-style:normal}
+
+/* ── 배지 ── */
+.b{display:inline-block;font:600 10.5px/1.5 var(--mono);letter-spacing:.06em;
+   padding:2px 7px;border-radius:5px;border:1px solid;white-space:nowrap;vertical-align:1px}
+.b.m1{color:var(--s1);border-color:#3987e555;background:#3987e514}
+.b.m2{color:var(--s2);border-color:#d9592655;background:#d9592614}
+.b.m3{color:var(--s3);border-color:#199e7055;background:#199e7014}
+.b.m4{color:var(--s4);border-color:#c9850055;background:#c9850014}
+.b.m5{color:var(--s5);border-color:#d5518155;background:#d5518114}
+.b.m6{color:var(--s6);border-color:#9085e955;background:#9085e914}
+.b.off{color:var(--ink3);border-color:var(--line);background:#ffffff08}
+.b.ok{color:var(--ok);border-color:#199e7055;background:#199e7014}
+.b.no{color:var(--bad);border-color:#d9592655;background:#d9592614}
+
+/* ── 콜아웃 ── */
+.callout{border-radius:10px;padding:15px 18px;margin:18px 0;border:1px solid;font-size:14px}
+.callout b{display:block;margin-bottom:5px;font-size:13px;font-family:var(--mono);letter-spacing:.06em}
+.callout p{margin:0 0 8px;color:var(--ink2)}
+.callout p:last-child{margin:0}
+.c-law{background:#c9850012;border-color:#c9850044}.c-law b{color:var(--gold-b)}
+.c-warn{background:#d9592610;border-color:#d9592644}.c-warn b{color:var(--s2)}
+.c-dead{background:#ffffff06;border-color:var(--line)}.c-dead b{color:var(--ink3)}
+.c-note{background:#3987e510;border-color:#3987e544}.c-note b{color:var(--s1)}
+
+/* ── 흐름도 ── */
+figure{margin:22px 0 26px}
+figure svg{display:block;width:100%;height:auto;background:var(--surface);
+           border:1px solid var(--line);border-radius:12px}
+figcaption{font-size:12.5px;color:var(--ink3);margin-top:9px;font-family:var(--mono)}
+.svgt{font-family:"Pretendard","Malgun Gothic",sans-serif}
+.svgm{font-family:var(--mono)}
+
+/* ── 사다리 차트 ── */
+.ladder{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:22px 24px;margin:18px 0}
+.lrow{display:grid;grid-template-columns:46px 1fr 62px 62px 66px;gap:12px;align-items:center;
+      padding:4px 0;font-size:13px}
+.lrow.head{font:600 11px/1.4 var(--mono);letter-spacing:.08em;color:var(--gold);
+           border-bottom:1px solid var(--gold-d);padding-bottom:8px;margin-bottom:6px;text-transform:uppercase}
+.lrow .lay{font:700 13px var(--mono);color:var(--ink2)}
+.lrow .bar{height:15px;background:var(--surface2);border-radius:4px;position:relative;overflow:hidden}
+.lrow .bar i{position:absolute;left:0;top:0;bottom:0;border-radius:0 4px 4px 0;display:block}
+.lrow .num{font:600 12.5px var(--mono);text-align:right;color:var(--ink2)}
+.lrow .num.g{color:var(--gold-b)}
+.lrow.peak .lay,.lrow.peak .num{color:var(--gold-b)}
+
+/* ── 정의 목록 ── */
+dl.gloss{margin:0}
+dl.gloss div{display:grid;grid-template-columns:150px 1fr;gap:16px;padding:11px 0;border-bottom:1px solid var(--line)}
+dl.gloss dt{font:700 13.5px var(--mono);color:var(--gold-b);margin:0}
+dl.gloss dd{margin:0;font-size:14px;color:var(--ink2)}
+dl.gloss dd em{font-style:normal;color:var(--ink3);font-size:12.5px;display:block;margin-top:2px}
+@media(max-width:700px){dl.gloss div{grid-template-columns:1fr;gap:2px}}
+
+details{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:0;margin:14px 0}
+details>summary{cursor:pointer;padding:14px 18px;font-weight:700;font-size:14.5px;list-style:none}
+details>summary::-webkit-details-marker{display:none}
+details>summary::before{content:"▸ ";color:var(--gold)}
+details[open]>summary::before{content:"▾ "}
+details>summary:hover{color:var(--gold-b)}
+details .body{padding:0 18px 16px}
+
+hr.rule{border:0;border-top:1px solid var(--line);margin:52px 0 0}
+.foot{padding-top:44px;color:var(--ink3);font-size:13px}
+.foot code{font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ═══ 표지 ═══ -->
+<header class="cover">
+  <div class="eyebrow">MOMANTIC · Internal Engineering Document</div>
+  <h1>GoldMiner v5.5.4<br><em>진입 · 청산 전략</em> 설계서</h1>
+  <p class="sub">한 사이클이 <b>대기</b>에서 시작해 <b>진입 · 물림 · 문제해결</b>을 거쳐 다시 <b>대기</b>로 돌아오기까지,
+  코드가 실제로 무엇을 보고 무엇을 판정하는지 구간별로 정리한 문서입니다.
+  모든 수치와 조건식은 정본 소스에서 직접 추출했습니다.</p>
+  <div class="meta">
+    <span><b>정본</b> GoldMiner_v5_5_4_internal_20260730.mq5 · 18,156줄</span>
+    <span><b>기준일</b> 2026-07-31 (7/31 ARM_USD 축 반영본)</span>
+    <span><b>대상</b> 내부 개발용</span>
+  </div>
+
+  <nav class="toc">
+    <h2>목차</h2>
+    <ol>
+      <li><a href="#s0">엔진을 한 장으로</a></li>
+      <li><a href="#s1">약어 사전</a></li>
+      <li><a href="#s2">생애주기 5구간 — 전체 흐름도</a></li>
+      <li><a href="#s3">틱 하나가 도는 순서</a></li>
+      <li><a href="#s4">진입 — 3중 게이트</a></li>
+      <li><a href="#s5">진입 차단 게이트 전수</a></li>
+      <li><a href="#s6">청산 — 6주체</a></li>
+      <li><a href="#s7">레이어헷징 전 생애</a></li>
+      <li><a href="#s8">보조 장치 4종</a></li>
+      <li><a href="#s9">상황별 분기 — 이럴 땐 어떻게 되나</a></li>
+      <li><a href="#s10">주의 — 주석과 코드가 다른 곳</a></li>
+    </ol>
+  </nav>
+</header>
+
+<!-- ═══ 0. 한 장 요약 ═══ -->
+<section id="s0">
+  <h2 class="sec">00 — Overview</h2>
+  <h3 class="title">엔진을 한 장으로</h3>
+  <p class="lede">이 EA는 <b>방향을 예측하지 않습니다.</b> 방향 판정 함수가 코드에 존재하지 않습니다.
+  BUY와 SELL 사이클이 서로를 참조하지 않고 독립적으로 돌며, 가격이 오면 층을 쌓고 비용을 넘긴 순간 묶어서 나갑니다.
+  이기는 방법은 예측이 아니라 <b>손실을 실현하지 않고 버티는 구조</b>입니다.</p>
+
+  <div class="callout c-law">
+    <b>§0 — 손실 실현 금지 (헌법)</b>
+    <p>"손절 없이 약수익 회복"이 이 EA의 본질입니다. 청산 주체 6개 전부가 발사 전에
+    <code>묶음 손익 − 비용 ≥ 0</code>을 확인하며, 손실 다리를 단독으로 닫는 경로는 코드 어디에도 없습니다.
+    마스터 손절 <code>UseCrushGuard</code>는 기본 <code>false</code>입니다.</p>
+  </div>
+
+  <h4>매직 5종 — 누가 무엇을 들고 있나</h4>
+  <div class="grid g5">
+    <div class="tile"><div class="lbl">본대 그리드</div><div class="val">202604</div><div class="note">마틴 사다리. 캡 <b>포함</b></div></div>
+    <div class="tile"><div class="lbl">레이어헷징</div><div class="val" style="color:var(--s1)">111</div><div class="note">방패. 캡 <b>포함</b></div></div>
+    <div class="tile"><div class="lbl">프로핏메이커</div><div class="val" style="color:var(--s3)">555</div><div class="note">부스터/러쉬. 캡 제외</div></div>
+    <div class="tile"><div class="lbl">해결사</div><div class="val" style="color:var(--s5)">777</div><div class="note">수동 개입. 캡 제외</div></div>
+    <div class="tile"><div class="lbl">주말락</div><div class="val" style="color:var(--s6)">999</div><div class="note">동결 섬. 캡 제외</div></div>
+  </div>
+
+  <h4>불가침 파라미터</h4>
+  <div class="grid g4">
+    <div class="tile"><div class="lbl">랏 사다리 합</div><div class="val">1.95</div><div class="note">L1~L12, base 0.01 기준 · L1~L11 = 1.73</div></div>
+    <div class="tile"><div class="lbl">방향 총노출 캡</div><div class="val">2.5 <span style="font-size:15px;color:var(--ink3)">랏</span></div><div class="note">그리드 + 헷징 합산, 방향 독립</div></div>
+    <div class="tile"><div class="lbl">헷지 발동선</div><div class="val">−$6,000</div><div class="note">해제선 −$5,000 · 복리 비례</div></div>
+    <div class="tile"><div class="lbl">최대 층</div><div class="val">L12</div><div class="note">L13+ 는 0.22 고정 리필</div></div>
+  </div>
+
+  <h4>층별 3중 게이트 — 전 층 실측표</h4>
+  <p>증차는 <b>랏 · 거리 · 시간 세 가지를 모두(AND)</b> 통과해야 합니다. 하나라도 미달이면 그 틱은 대기입니다.</p>
+
+  <div class="ladder">
+    <div class="lrow head"><span>층</span><span>랏 (base 0.01)</span><span class="num">랏</span><span class="num">요구 갭</span><span class="num">최소 대기</span></div>
+    <div class="lrow"><span class="lay">L1</span><span class="bar"><i style="width:2.9%;background:var(--s1)"></i></span><span class="num">0.01</span><span class="num">—</span><span class="num">—</span></div>
+    <div class="lrow"><span class="lay">L2</span><span class="bar"><i style="width:5.7%;background:var(--s1)"></i></span><span class="num">0.02</span><span class="num">$3.00</span><span class="num">90s</span></div>
+    <div class="lrow"><span class="lay">L3</span><span class="bar"><i style="width:8.6%;background:var(--s1)"></i></span><span class="num">0.03</span><span class="num">$3.00</span><span class="num">90s</span></div>
+    <div class="lrow"><span class="lay">L4</span><span class="bar"><i style="width:14.3%;background:var(--s1)"></i></span><span class="num">0.05</span><span class="num">$3.00</span><span class="num">90s</span></div>
+    <div class="lrow"><span class="lay">L5</span><span class="bar"><i style="width:22.9%;background:var(--s1)"></i></span><span class="num">0.08</span><span class="num">$3.00</span><span class="num">90s</span></div>
+    <div class="lrow"><span class="lay">L6</span><span class="bar"><i style="width:34.3%;background:var(--s3)"></i></span><span class="num">0.12</span><span class="num">$4.50</span><span class="num">90s</span></div>
+    <div class="lrow"><span class="lay">L7</span><span class="bar"><i style="width:51.4%;background:var(--s3)"></i></span><span class="num">0.18</span><span class="num">$4.50</span><span class="num">90s</span></div>
+    <div class="lrow"><span class="lay">L8</span><span class="bar"><i style="width:77.1%;background:var(--s3)"></i></span><span class="num">0.27</span><span class="num">$4.50</span><span class="num">90s</span></div>
+    <div class="lrow"><span class="lay">L9</span><span class="bar"><i style="width:88.6%;background:var(--gold)"></i></span><span class="num">0.31</span><span class="num">$9.90</span><span class="num">5분</span></div>
+    <div class="lrow peak"><span class="lay">L10</span><span class="bar"><i style="width:100%;background:var(--gold-b)"></i></span><span class="num g">0.35</span><span class="num">$9.90</span><span class="num">15분</span></div>
+    <div class="lrow"><span class="lay">L11</span><span class="bar"><i style="width:88.6%;background:var(--s2)"></i></span><span class="num">0.31</span><span class="num g">$15.90</span><span class="num">30분</span></div>
+    <div class="lrow"><span class="lay">L12</span><span class="bar"><i style="width:62.9%;background:var(--s2)"></i></span><span class="num">0.22</span><span class="num">$9.90</span><span class="num">60분</span></div>
+    <div class="lrow"><span class="lay">L13+</span><span class="bar"><i style="width:62.9%;background:var(--ink3)"></i></span><span class="num">0.22</span><span class="num">$9.90</span><span class="num">2시간*</span></div>
+  </div>
+  <figcaption>랏은 L10에서 정점(0.35)을 찍고 꺾이는 <b>벨형</b>입니다. 곱셈이 아니라 12칸 고정 테이블 직조회입니다.
+  * L13+는 시간게이트보다 <b>고정구역 2시간 쿨다운</b>이 실질 브레이크로 먼저 걸립니다.</figcaption>
+
+  <div class="callout c-note">
+    <b>왜 L11만 $15.90인가</b>
+    <p>7/31 사장님 지시로 <code>PROG_MULT_L11</code>을 3.3 → 5.3으로 단독 상향했습니다. L9~L15+가 전부 ×3.3($9.90)으로
+    평탄화되면서 L11 도달 낙폭이 $70.2 → $55.2로 줄어 <b>L11이 평시화</b>됐기 때문입니다. L11 한 칸만 벌려 깊이를 되살린 조정입니다.</p>
+  </div>
+</section>
+
+<!-- ═══ 1. 약어 사전 ═══ -->
+<section id="s1">
+  <h2 class="sec">01 — Glossary</h2>
+  <h3 class="title">약어 사전</h3>
+  <p class="lede">이 문서와 코드에 나오는 약어를 먼저 정리합니다. 코드에 실물이 없는 문서 전용 용어는 따로 표시했습니다.</p>
+
+  <h4>기계 이름</h4>
+  <dl class="gloss">
+    <div><dt>통문</dt><dd>그룹 TP. 한 사이드 전체를 하나의 목표가에 묶어 통째로 나가는 출구. 서버 지정가로 상주하므로 EA가 죽어도 브로커가 체결합니다.</dd></div>
+    <div><dt>셀프 그라인딩</dt><dd>같은 사이드 안에서 수익 다리(연료)와 손실 다리(대상)를 묶어 동시 청산. 레이어 <b>통째</b> 단위, 부분청산 없음.<em>Grind_Try</em></dd></div>
+    <div><dt>XGrind (교차)</dt><dd>물린 사이드에 자기 연료가 없을 때, <b>반대편</b> 수익을 연료로 끌어와 구조. 연료측에 확장TP를 걸어 먼저 못 빠져나가게 잠급니다.</dd></div>
+    <div><dt>OVERCAP-D</dt><dd>L13+ 리필 다리 전용 별도 차선. 유일하게 <b>부분청산</b>(0.05랏 청크)을 씁니다.</dd></div>
+    <div><dt>LHEDGE / 방패</dt><dd>레이어헷징. 물린측 손실이 임계에 닿으면 반대 방향으로 사다리 방패를 전개.<em>매직 111</em></dd></div>
+    <div><dt>WKL / WLU</dt><dd>주말락. 금요 마감 전 순노출의 절반을 헷지로 덮고 <b>섬</b>으로 격리해 갭을 무력화.<em>매직 999 · WKL=상수 접두, WLU=함수 접두</em></dd></div>
+    <div><dt>PM / 러쉬 / 부스터</dt><dd>프로핏메이커. 시장 가드를 전부 무시하고 도는 <b>독립 채굴 엔진</b>. 수동 버튼 발동.<em>매직 555</em></dd></div>
+    <div><dt>SOLVER / 해결사</dt><dd>수동 버튼으로 최악 손실 다리 1개를 신규 진입과 묶어 합산 평단에서 동반청산.<em>매직 777</em></dd></div>
+    <div><dt>돌려깎기 / EXITPLAN</dt><dd>남의 수익으로 상환하며 양방향 번갈아 부분 절단하는 상비 목표가 엔진. 위기 중에도 유일하게 계속 도는 소각기입니다.</dd></div>
+  </dl>
+
+  <h4>게이트 · 판정</h4>
+  <dl class="gloss">
+    <div><dt>F6</dt><dd>랏 사다리를 12칸 고정 테이블로 못박은 개정. 곱셈 체인 폐기, 단일 출처.</dd></div>
+    <div><dt>F7</dt><dd>거리 배율 개정. L9 이상을 ×3.3($9.90)으로 평탄화.</dd></div>
+    <div><dt>DDM</dt><dd>일중 고·저 대비 폭주 거리로 위기 심도를 0~3단계로 매기는 지표. <b>거리 연동은 현재 꺼져 있고</b>, 위기 하한 계산에만 쓰입니다.</dd></div>
+    <div><dt>DM / DM_FLUSH</dt><dd>드리프트 채굴. 추세 차단 중에도 제한적으로 캐는 별도 상태기계. FLUSH = 그 사이클을 TP로 비우며 대기하는 상태.</dd></div>
+    <div><dt>FLUSH 관문</dt><dd>FLUSH 국면에서 태어난 사이클은 <b>L5에서 정지</b>. 4시간 경과 또는 반대편 락 20% 감소로만 풀립니다.</dd></div>
+    <div><dt>EI</dt><dd>이벤트 인벤토리. NFP·CPI·FOMC 등 화이트리스트 지표가 4시간 앞에 있으면 신규 사이클만 보류.</dd></div>
+    <div><dt>GX</dt><dd>시소 보존 게이트. "분할 청산을 하더라도 <b>한쪽을 다 날리지 마라</b>". 세션·쿨다운·소진율·커버리지 4중.</dd></div>
+    <div><dt>ExitTxn / 골</dt><dd>청산 트랜잭션. "한 포지션은 동시에 한 기계만" — 티켓 예약제로 중복 청산을 막습니다.</dd></div>
+    <div><dt>§16</dt><dd>서버 안전 조문. 연결 게이트 + 주문 총량 상한(300ms 간격, 10초당 20건). 브로커 제재 방어.</dd></div>
+    <div><dt>약수익</dt><dd>스프레드 + 수수료 + 스왑을 차감하고도 남는 최소 순익. 헌법상 이 기준은 낮출 수 없습니다.</dd></div>
+    <div><dt>만재</dt><dd>방향 총노출이 캡(2.5랏)에 닿아 더 못 넣는 상태. 이 순간 그라인딩이 <b>4시간을 기다리지 않고 즉시</b> 켜집니다.</dd></div>
+    <div><dt>연료 / 대상</dt><dd>연료 = 수익 다리(재원), 대상 = 손실 다리(태울 것). 소각 = 둘을 묶어 동시에 닫는 것.</dd></div>
+    <div><dt>완충</dt><dd>최신 승자 블록 바로 앞의 손실 다리 1개는 건드리지 않는 규칙.</dd></div>
+    <div><dt>섬</dt><dd>주말락이 격리한 티켓 집합. TP를 0으로 지우고, 통문·그라인딩·헷징 전부 이 다리를 못 봅니다.</dd></div>
+    <div><dt>회랑</dt><dd>위기 국면에서 방패가 벗겨지지 않도록 지키는 헷지 비율 하한. 0 / 0.25 / 0.375 / 0.50.</dd></div>
+    <div><dt>해제선</dt><dd>손실이 이만큼 줄면 헷지 작동을 멈추는 선(−$5,000). <b>비영구</b> — 다시 나빠지면 정상 재개합니다.</dd></div>
+    <div><dt>입양</dt><dd>코멘트가 훼손된 유령 다리를 랏 역산으로 층을 추정해 다시 수집에 편입하는 처리.</dd></div>
+  </dl>
+
+  <details>
+    <summary>코드에 없는 문서 전용 용어 (SHD 계보 — 메인 엔진 미이식)</summary>
+    <div class="body">
+      <p style="color:var(--ink2);font-size:14px">아래는 폐기된 SHD 계보의 아이디어로, 현재 메인 엔진에 <b>구현체가 없습니다</b>.
+      사장님이 쓰시는 말이므로 사전에는 남기되 코드에서 찾으면 안 됩니다.</p>
+      <dl class="gloss">
+        <div><dt>관통 정산 / 역관통</dt><dd>SHD 고유. 본체 grep 0건.</dd></div>
+        <div><dt>편승 / 상환 편승</dt><dd>SHD 고유. 본체 grep 0건.</dd></div>
+        <div><dt>침식</dt><dd>개념은 살아있음 — 순기여 필터 <code>pnl − 0.5×랏×100 &gt; 0</code>으로 구현되어 있습니다.</dd></div>
+        <div><dt>방패(778)</dt><dd>매직 778은 없음. 방패는 111 LHEDGE로 구현됨.</dd></div>
+        <div><dt>뚜껑갈이</dt><dd>엔진 동일·겉모습만 다른 리브랜딩(앤트가드·한스골드). 코드 용어가 아니라 프로세스 용어.</dd></div>
+      </dl>
+    </div>
+  </details>
+</section>
+
+<!-- ═══ 2. 생애주기 ═══ -->
+<section id="s2">
+  <h2 class="sec">02 — Lifecycle</h2>
+  <h3 class="title">생애주기 5구간</h3>
+  <p class="lede">코드에 <code>IDLE/BUILDING/…</code> 같은 enum은 없습니다. <code>CycleState</code> 구조체의 필드 조합으로 암묵 표현됩니다.
+  아래 구간 이름은 설명용 라벨이고, <b>전이 조건은 전부 실제 조건식</b>입니다.</p>
+
+  <figure>
+  <svg viewBox="0 0 1120 560" role="img" aria-label="GoldMiner 사이클 생애주기 5구간 흐름도">
+    <defs>
+      <marker id="ar" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+        <path d="M0,0 L9,4.5 L0,9 z" fill="#8b8a80"/></marker>
+      <marker id="arg" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+        <path d="M0,0 L9,4.5 L0,9 z" fill="#c98500"/></marker>
+      <marker id="arb" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+        <path d="M0,0 L9,4.5 L0,9 z" fill="#199e70"/></marker>
+    </defs>
+
+    <!-- 구간 박스 -->
+    <g class="svgt">
+      <!-- IDLE -->
+      <rect x="30" y="60" width="176" height="104" rx="12" fill="#232321" stroke="#33322e"/>
+      <text x="46" y="88" fill="#8b8a80" font-size="11" class="svgm">구간 1</text>
+      <text x="46" y="112" fill="#f4f3ee" font-size="19" font-weight="700">대기</text>
+      <text x="46" y="133" fill="#8b8a80" font-size="11.5" class="svgm">posCount == 0</text>
+      <text x="46" y="150" fill="#8b8a80" font-size="11.5" class="svgm">layerCount == 0</text>
+
+      <!-- BUILDING -->
+      <rect x="266" y="60" width="196" height="104" rx="12" fill="#232321" stroke="#3987e577"/>
+      <text x="282" y="88" fill="#8b8a80" font-size="11" class="svgm">구간 2</text>
+      <text x="282" y="112" fill="#3987e5" font-size="19" font-weight="700">진입 · 전개</text>
+      <text x="282" y="133" fill="#8b8a80" font-size="11.5" class="svgm">L1 → L2 → … → L12</text>
+      <text x="282" y="150" fill="#8b8a80" font-size="11.5" class="svgm">3중 게이트 매 층 평가</text>
+
+      <!-- STRESSED -->
+      <rect x="522" y="60" width="196" height="104" rx="12" fill="#232321" stroke="#c9850077"/>
+      <text x="538" y="88" fill="#8b8a80" font-size="11" class="svgm">구간 3</text>
+      <text x="538" y="112" fill="#c98500" font-size="19" font-weight="700">물림</text>
+      <text x="538" y="133" fill="#8b8a80" font-size="11.5" class="svgm">만재 ∨ 4h 경과</text>
+      <text x="538" y="150" fill="#8b8a80" font-size="11.5" class="svgm">∨ −$1,500 ∨ −$6,000</text>
+
+      <!-- RESOLVING -->
+      <rect x="522" y="256" width="196" height="118" rx="12" fill="#232321" stroke="#d9592677"/>
+      <text x="538" y="284" fill="#8b8a80" font-size="11" class="svgm">구간 4</text>
+      <text x="538" y="308" fill="#d95926" font-size="19" font-weight="700">문제해결</text>
+      <text x="538" y="329" fill="#8b8a80" font-size="11.5" class="svgm">그라인딩 · XGrind</text>
+      <text x="538" y="346" fill="#8b8a80" font-size="11.5" class="svgm">헷지 전개 · 돌려깎기</text>
+      <text x="538" y="363" fill="#8b8a80" font-size="11.5" class="svgm">해결사 · 레스큐</text>
+
+      <!-- CLOSING -->
+      <rect x="266" y="256" width="196" height="118" rx="12" fill="#232321" stroke="#199e7077"/>
+      <text x="282" y="284" fill="#8b8a80" font-size="11" class="svgm">구간 5</text>
+      <text x="282" y="308" fill="#199e70" font-size="19" font-weight="700">청산 · 정리</text>
+      <text x="282" y="329" fill="#8b8a80" font-size="11.5" class="svgm">묶음 손익 − 비용 ≥ 0</text>
+      <text x="282" y="346" fill="#8b8a80" font-size="11.5" class="svgm">14필드 리셋</text>
+      <text x="282" y="363" fill="#8b8a80" font-size="11.5" class="svgm">GV 삭제</text>
+    </g>
+
+    <!-- 화살표 -->
+    <g fill="none" stroke="#8b8a80" stroke-width="1.6" marker-end="url(#ar)">
+      <path d="M206,112 L258,112"/>
+      <path d="M462,112 L514,112"/>
+      <path d="M620,164 L620,248"/>
+      <path d="M514,315 L470,315"/>
+      <path d="M266,315 L120,315 L120,172"/>
+    </g>
+    <!-- 되돌아가는 전이 (금색) -->
+    <g fill="none" stroke="#c98500" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#arg)">
+      <path d="M560,250 C520,205 470,190 400,168"/>
+    </g>
+    <!-- 사이클 반복 (초록) -->
+    <g fill="none" stroke="#199e70" stroke-width="1.6" marker-end="url(#arb)">
+      <path d="M340,250 C340,215 350,190 364,170"/>
+    </g>
+
+    <!-- 라벨 -->
+    <g class="svgm" font-size="11">
+      <text x="212" y="102" fill="#c3c2b7">canOpenNew</text>
+      <text x="212" y="118" fill="#8b8a80">14조건 AND</text>
+      <text x="212" y="134" fill="#8b8a80">+ 진입 7게이트</text>
+
+      <text x="468" y="98" fill="#c3c2b7">room &lt; 최소랏</text>
+      <text x="468" y="114" fill="#8b8a80">∨ 4시간 경과</text>
+      <text x="468" y="130" fill="#8b8a80">∨ 급락 −$1,500</text>
+      <text x="468" y="146" fill="#8b8a80">∨ 부동 −$6,000</text>
+
+      <text x="632" y="200" fill="#c3c2b7">해결 기계</text>
+      <text x="632" y="216" fill="#8b8a80">우선순위 8단</text>
+
+      <text x="476" y="300" fill="#c3c2b7">약수익 통과</text>
+      <text x="476" y="316" fill="#8b8a80">+ GX 시소 OK</text>
+      <text x="476" y="332" fill="#8b8a80">+ 골 획득</text>
+
+      <text x="132" y="252" fill="#c3c2b7">posCount == 0</text>
+      <text x="132" y="268" fill="#8b8a80">→ 14필드 리셋</text>
+      <text x="132" y="284" fill="#8b8a80">→ 다음 틱 재개</text>
+
+      <text x="600" y="234" fill="#c98500" font-weight="600">★ 소각으로 랏이 비면</text>
+      <text x="600" y="250" fill="#c98500">즉시 증차 재개 (원 층번호 복원)</text>
+
+      <text x="196" y="212" fill="#199e70">TP 도달</text>
+      <text x="196" y="228" fill="#199e70">통문 자연 마감</text>
+    </g>
+
+    <!-- 하단: 상시 감시 레일 -->
+    <g class="svgt">
+      <rect x="30" y="424" width="1060" height="102" rx="12" fill="#1a1a19" stroke="#33322e"/>
+      <text x="52" y="452" fill="#c98500" font-size="12" class="svgm" letter-spacing="1.4">항상 도는 것 — 구간 무관</text>
+      <text x="52" y="480" fill="#c3c2b7" font-size="13">통문(그룹TP) 서버 상주 · §16 서버안전 게이트 · GX 시소보존 · ExitTxn 예약 · 라이선스/원격 래치 · 대시보드</text>
+      <text x="52" y="504" fill="#8b8a80" font-size="12.5">PM(555)은 이 레일 위에서 <tspan fill="#199e70">시장 가드를 전부 무시하고</tspan> 독립적으로 돕니다. 해결사(777)는 수동 버튼으로만 개입합니다.</text>
+    </g>
+  </svg>
+  </figure>
+  <figcaption>실선 = 정상 진행 · 금색 점선 = 되돌아가는 전이(핵심 설계) · 초록 = 사이클 반복</figcaption>
+
+  <div class="callout c-law">
+    <b>핵심 설계 — 소각하면 증차가 되살아난다</b>
+    <p>구간 4에서 구간 2로 돌아가는 금색 점선이 이 엔진의 심장입니다. 캡 판정 기준이 <b>층번호 래치가 아니라 랏 예산</b>이기 때문에,
+    그라인딩으로 비운 만큼은 곧바로 재진입이 허용됩니다.</p>
+    <p>층번호도 복원됩니다 — <code>newL = FindMaxLiveLayer() + 1</code>. L10 연료를 태웠으면 살아있는 최대가 L9가 되고,
+    다음 증차는 <b>다시 L10</b>으로 원래 랏·원래 간격으로 들어갑니다.</p>
+    <p style="color:var(--ink3);font-size:13px">구 방식(층번호 래치)은 소각 후 재진입을 영구 차단해서 연료가 재생되지 않았고,
+    결국 그라인딩이 고사했습니다(5월 실증). 그래서 바뀐 겁니다.</p>
+  </div>
+
+  <h4>구간별 상태 변수 변화</h4>
+  <table>
+    <thead><tr><th>구간</th><th>진입 조건</th><th>바뀌는 것</th><th>나가는 조건</th></tr></thead>
+    <tbody>
+      <tr><td><b>1 대기</b></td><td>포지션 0</td>
+        <td>감시만 — 일중 고저, DDM 단계, 6개 가드, 드리프트 편차, 목표달성</td>
+        <td><code>canOpenNew</code> 14조건 + 진입 7게이트</td></tr>
+      <tr><td><b>2 진입·전개</b></td><td>L1 체결</td>
+        <td><code>cycleStartTime</code>(그라인딩 4h 시계 기점) · <code>baseLotForCycle</code> · <code>bornInFlush</code> 각인 · 층마다 <code>layerCount++</code>, <code>lastEntryPrice/Time</code> 갱신, 그룹TP 재계산</td>
+        <td>만재 ∨ 4h ∨ 급락 ∨ 부동 임계</td></tr>
+      <tr><td><b>3 물림</b></td><td>위 4기준 중 하나</td>
+        <td><code>g_lh.active=true</code>(헷지 arm) · 스냅샷 촬영 · <code>armPrice</code> 각인 · DDM 단계 상승 · 고정구역 진입(0.22 + 2h 쿨다운)</td>
+        <td>해결 기계가 조건 충족</td></tr>
+      <tr><td><b>4 문제해결</b></td><td>기계별 개별 조건</td>
+        <td>소각·전개·부분절단이 진행. <code>removedLots</code> 누적, <code>snapLots</code> 상승(래칫)</td>
+        <td>약수익 통과 + GX 통과 + 골 획득</td></tr>
+      <tr><td><b>5 청산·정리</b></td><td>발사 성립</td>
+        <td>포지션 0 되면 <b>14필드 개별 리셋</b>(ZeroMemory 아님) · 헷지는 물린측 랏 0에서 <code>LHEDGE_ResetAll</code> · GV 삭제</td>
+        <td>다음 틱 <code>posCount==0 && canOpenNew</code></td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout c-warn">
+    <b>다음 사이클이 안 열리는 4가지</b>
+    <p><code>g_gm_harvestDone</code> 목표 달성(영구, 스위치로만 해제) · <code>g_gm_dailyMinedDone</code> 일일 목표(자정 리셋) ·
+    <code>g_dailyCrushed</code> 당일 손실 한도(자정 리셋) · <code>g_fcShutdown</code> 강제청산 래치(<b>EA 재적용으로만 해제</b>).</p>
+  </div>
+</section>
+
+<!-- ═══ 3. OnTick ═══ -->
+<section id="s3">
+  <h2 class="sec">03 — Tick Order</h2>
+  <h3 class="title">틱 하나가 도는 순서</h3>
+  <p class="lede"><b>순서가 결과를 바꾸는 엔진</b>입니다. 아래는 <code>OnTick</code> 623줄을 평가 순서 그대로 편 것입니다.
+  위 단계가 <code>return</code>하면 아래는 그 틱에 아예 실행되지 않습니다.</p>
+
+  <table>
+    <thead><tr><th class="n">#</th><th>단계</th><th>하는 일</th><th>통과 못 하면</th></tr></thead>
+    <tbody>
+      <tr><td class="n">1</td><td>부트</td><td><code>BootComplete()</code> 1회</td><td>return (첫 틱 소모)</td></tr>
+      <tr><td class="n">2</td><td><b>강제청산 래치</b></td><td><code>g_fcShutdown</code> — 2초 주기 잔여 재청산 + 대시보드만</td><td><b>아래 전 로직 완전 차단</b></td></tr>
+      <tr><td class="n">3~4</td><td>일중 고저 · DDM</td><td>고·저 갱신, 양 사이드 DDM 단계 매 틱 재계산</td><td>—</td></tr>
+      <tr><td class="n">5~7</td><td>SafeResume</td><td>2시간 무틱이면 재개 점검 시작 / 5항목 검사</td><td>15초 홀드</td></tr>
+      <tr><td class="n">9</td><td>가드 6종</td><td>뉴스 · ATR · 급변(RMG) · 스프레드스파이크 · 체결품질 · 새벽뉴스</td><td>플래그만 세움</td></tr>
+      <tr><td class="n">10</td><td>일자 전환</td><td>자정 리셋. <b>단 FLUSH + 포지션 있으면 리셋 보류</b></td><td>—</td></tr>
+      <tr><td class="n">12~13</td><td>드리프트 · DM</td><td>추세 차단 판정, 드리프트 채굴 상태기계</td><td><code>g_driftBlock</code> 확정</td></tr>
+      <tr><td class="n">16</td><td>TP 안전망</td><td>3초 주기 그룹TP 정합 검증 + TP=0 미아 복구</td><td>3초 미경과 skip</td></tr>
+      <tr><td class="n"><b>18</b></td><td><b>PM (555)</b></td><td><b>메인 early-return보다 먼저</b> — 가드 무관 독립 채굴</td><td>비활성이면 내부 return</td></tr>
+      <tr><td class="n">19~22</td><td>목표·손실 정지</td><td>Harvest / DailyMine / Crush</td><td>각각 <b>return</b></td></tr>
+      <tr><td class="n"><b>23</b></td><td><b>스프레드 게이트</b></td><td><code>spread &gt; 60pt</code></td><td><b>return — 진입·증차·청산 평가 전부 skip</b></td></tr>
+      <tr><td class="n">24~25</td><td>시간 · 서버</td><td><code>canTrade = 장중 && !금요halt && ServerReady()</code></td><td>거짓이면 <b>수익 포지션만</b> 정리</td></tr>
+      <tr><td class="n">26</td><td><code>canOpenNew</code></td><td>14조건 AND 합성</td><td>신규만 보류 (증차·청산은 계속)</td></tr>
+      <tr><td class="n"><b>28</b></td><td><b>ManageCycle</b></td><td>BUY 먼저 → SELL. 신규 / 증차 / 셀프그라인딩 / OVERCAP-D</td><td>방향별 독립</td></tr>
+      <tr><td class="n">29</td><td>XGrind</td><td>양쪽 state 갱신 <b>후</b> 1회 — 무장측은 Arm(재계산) → Monitor(발사) 순</td><td>—</td></tr>
+      <tr><td class="n">30</td><td>ExitTxn 감사</td><td>골 사후 점검 (E4)</td><td>소유자 없으면 return</td></tr>
+      <tr><td class="n">31</td><td>LHEDGE</td><td>편입 → 돌려깎기 → 콤보 → done판정 → 발사 → 전개</td><td>—</td></tr>
+      <tr><td class="n">32~34</td><td>주말락 · 해결사 · PM스윕</td><td>999 상태기계 / 777 감시 / 555 고아 회수</td><td>—</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout c-note">
+    <b>순서가 결과를 바꾸는 지점 3곳</b>
+    <p><b>①</b> PM(#18)이 Harvest·Crush(#19~22)보다 앞 → 일일 정지 상태에서도 러쉬는 계속 돕니다.<br>
+    <b>②</b> 스프레드 게이트(#23)가 ManageCycle(#28)보다 앞 → 스프레드가 벌어지면 <b>청산 평가까지</b> 멈춥니다.<br>
+    <b>③</b> XGrind(#29)가 ManageCycle(#28) 뒤 → 양 사이드 상태가 확정된 뒤에 교차 판정을 합니다.
+    (Arm→Monitor 순서도 실측 사고 대응입니다 — 구성이 바뀌었는데 낡은 확장TP로 먼저 발사해 −$538)</p>
+  </div>
+</section>
+
+<!-- ═══ 4. 진입 3중 게이트 ═══ -->
+<section id="s4">
+  <h2 class="sec">04 — Entry</h2>
+  <h3 class="title">진입 — 3중 게이트</h3>
+
+  <h4>최초 진입(L1)은 사다리를 타지 않는다</h4>
+  <p>L1 랏은 <code>GetLotForLayer(1, …)</code>이 아니라 <code>GetActiveLot()</code>을 직접 씁니다.
+  결과값은 같지만 <b>경로가 분리</b>되어 있어 개조할 때 함정입니다.</p>
+<pre><b>double</b> GetActiveLot()
+{
+   <b>if</b>(!UseAutoLot) <b>return</b> BaseLot;
+   <b>double</b> bal = AccountInfoDouble(ACCOUNT_BALANCE);
+   <b>double</b> lot = MathFloor(bal / GetLotUnit()) * BaseLot;   <i>// 공격 3.5만 / 일반 5만 / 안전 7만 / 방어 10만</i>
+   <b>return</b> NormalizeLot(MathMax(lot, BaseLot));
+}
+<i>→ 체결 후 state.baseLotForCycle 에 고정. 이 사이클의 사다리 base 가 됩니다.</i></pre>
+
+  <div class="callout c-note">
+    <b>방향은 어떻게 정하나 — 정하지 않습니다</b>
+    <p>BUY/SELL 사이클은 서로를 참조하지 않는 독립 상태기계입니다.
+    같은 틱에 두 방향 모두 <code>posCount==0 && canOpenNew</code>면 <b>양쪽이 동시에 L1을 엽니다.</b>
+    추세·지표로 방향을 고르는 함수는 코드에 없습니다.</p>
+    <p>유일한 편측 강제는 <b>드리프트 원웨이</b> — 추세 가드 발동 중에는 추세 <b>역방향 신규만</b> 거부합니다
+    (진행 중 사이클의 증차는 무관).</p>
+  </div>
+
+  <h4>증차 — 세 게이트는 AND</h4>
+  <p><code>ShouldAddLayer</code>는 순차 early-return 구조라 하나라도 실패하면 그 틱은 대기입니다. 평가 순서:</p>
+
+  <div class="grid g3">
+    <div class="card">
+      <h6>① 랏 게이트 — 제일 먼저</h6>
+      <p><code>room = 캡 − 그리드랏 − 헷지랏</code><br>
+      <code>room &lt; 0.01</code> 이면 즉시 스킵.<br><br>
+      캡 <b>2.5랏</b>은 그리드(202604)와 헷징(111) <b>합산</b>이며 방향별로 독립입니다.
+      777·555·999는 캡에서 빠집니다.</p>
+    </div>
+    <div class="card">
+      <h6>② 거리 게이트</h6>
+      <p><code>reqGap = 300pt × 배율</code><br>
+      기준점은 층 가격이 아니라 <b>직전 체결가</b>(<code>lastEntryPrice</code>)입니다.<br><br>
+      소각으로 다리가 빠지면 이 값만 재동기화되고 <b>시간은 건드리지 않습니다.</b></p>
+    </div>
+    <div class="card">
+      <h6>③ 시간 게이트</h6>
+      <p><code>elapsed &lt; min && gap ≥ reqGap</code><br>
+      조건에 주목 — <b>가격이 이미 닿았을 때만</b> 발동하는 브레이크입니다.
+      거리가 미달이면 시간 게이트는 아예 평가되지 않습니다.</p>
+    </div>
+  </div>
+
+  <div class="callout c-law">
+    <b>층번호는 "보유 개수 + 1"이 아니라 "살아있는 최대 층 + 1"</b>
+    <p><code>gateNextL = FindMaxLiveLayer() + 1</code>. 보유 다리 수로 세면 대량 청산 경로에서 무너집니다 —
+    거리 $9.90→$3.00, 시간 1800초→90초가 <b>동시에 붕괴</b>해서 0.22 폭주가 납니다.</p>
+    <p style="color:var(--ink3);font-size:13px">실측: 보유수 방식 EqDD 55.28% vs liveMax 방식 47.83%.</p>
+  </div>
+
+  <h5>시간 게이트 보정 3종</h5>
+  <table>
+    <thead><tr><th>보정</th><th>값</th><th>조건</th></tr></thead>
+    <tbody>
+      <tr><td>전 층 공통 하드 쿨</td><td class="n"><b>3초</b></td><td>무조건. 시간 계단보다 먼저 걸립니다</td></tr>
+      <tr><td>도쿄 가드</td><td class="n"><b>max(현재, 60초)</b></td><td>L9 진입 && KST 08:30~09:59</td></tr>
+      <tr><td>FLUSH 출생</td><td class="n"><b>×2.0</b></td><td><code>bornInFlush</code> 사이클은 전 구간 2배</td></tr>
+    </tbody>
+  </table>
+
+  <h5>되돌림 확인(LR) — L2~L8 한정</h5>
+  <p>평상시에는 무비용으로 통과합니다. 다음 3조건 중 하나로 <b>무장(arming)</b>됐을 때만 되돌림을 요구합니다:
+  급변 가드 발동 중 · 요구 갭을 60pt 이상 오버슛 · 런던 개장(KST 16~17시) 창.
+  무장 시 요구 되돌림은 <b>90pt</b>, 역행이 요구 갭의 2배 이상으로 깊으면 절반(45pt)으로 완화됩니다.
+  L9 이상은 즉시 통과합니다.</p>
+</section>
+
+<!-- ═══ 5. 차단 게이트 ═══ -->
+<section id="s5">
+  <h2 class="sec">05 — Gates</h2>
+  <h3 class="title">진입 차단 게이트 전수</h3>
+  <p class="lede">게이트는 <b>두 군데</b>에 있습니다 — <code>canOpenNew</code> 합성(14조건)과 <code>OpenInitial</code> 내부(7개 return).
+  하나만 보고 "차단 원인"을 단정하면 틀립니다.</p>
+
+  <h4>신규 사이클 — 평가 순서</h4>
+  <table>
+    <thead><tr><th class="n">순</th><th>게이트</th><th>통과 조건</th><th>실패 시</th></tr></thead>
+    <tbody>
+      <tr><td class="n">1</td><td>스프레드</td><td><code>≤ 60pt</code></td><td>OnTick 전체 return</td></tr>
+      <tr><td class="n">2</td><td><code>canTrade</code></td><td>장중 && !금요halt && <code>ServerReady()</code></td><td>수익청산만 돌고 신규·증차 정지</td></tr>
+      <tr><td class="n">3</td><td><code>canOpenNew</code></td><td>라이선스 · 원격 · 뉴스 · ATR · 급변 · SafeResume · 새벽뉴스 · 드리프트 · Harvest · 일일목표 · 쿨다운 · 마감창 — <b>14조건 AND</b></td><td>신규만 보류 (사유 로그 60초 스로틀)</td></tr>
+      <tr><td class="n">4</td><td>드리프트 원웨이</td><td>추세 순방향 ∨ 양방향 재개 플래그</td><td>편측 차단</td></tr>
+      <tr><td class="n">5</td><td>청산 트랜잭션</td><td>골 진행 중 아님</td><td>≤10초 유예</td></tr>
+      <tr><td class="n">6</td><td>중복 진입</td><td>30초 내 ±100pt 포지션 없음</td><td>차단</td></tr>
+      <tr><td class="n">7</td><td>증거금</td><td><code>여유 ≥ 필요 × 1.05</code></td><td>차단 + <b>60초 쿨다운</b></td></tr>
+      <tr><td class="n">8</td><td>§16 서버</td><td><code>ServerReady() && CanSendOrder()</code></td><td>다음 틱 재평가 (버리지 않음)</td></tr>
+      <tr><td class="n">9</td><td>총노출 캡</td><td><code>room ≥ 0.01</code></td><td>차단</td></tr>
+      <tr><td class="n">10</td><td>EI</td><td>4시간 내 화이트리스트 지표 없음</td><td>양방향 보류 (조용히)</td></tr>
+      <tr><td class="n">11</td><td>8시락</td><td>KST 20:00~08:45 밖</td><td>차단 <span class="b off">기본 OFF</span></td></tr>
+    </tbody>
+  </table>
+
+  <h4>FLUSH 관문 — 반대편 만재 방지 장치</h4>
+  <p>FLUSH 국면에서 태어난 사이클에는 표식이 찍히고, 그 표식이 <b>L5에서 전개를 세웁니다.</b></p>
+<pre><i>// 표식 각인 — 신규 진입 직전</i>
+state.bornInFlush   = (g_dm_state == <b>DM_FLUSH</b>);
+state.flushLockBase = SumOpenLotsBySide(<i>반대방향</i>);   <i>// 스냅샷</i>
+
+<i>// 관문 — L5 초과 시도할 때</i>
+<b>if</b>(bornInFlush && !flushGatePassed && gateNextL &gt; <b>5</b>)
+{
+   fgTimeOK = (경과 ≥ <b>4시간</b>);
+   fgCutOK  = (반대편 락 ≤ 스냅샷 × <b>0.80</b>);      <i>// 20% 감소</i>
+   <b>if</b>(fgTimeOK <b>||</b> fgCutOK) flushGatePassed = <b>true</b>;  <i>// 사이클당 1회 래치</i>
+   <b>else</b> <b>return false</b>;                              <i>// 보류(차단 아님)</i>
+}</pre>
+  <p>해제 경로는 둘 — 4시간 텀 <b>또는</b> 반대편 락 20% 감소. FLUSH 자체가 끝나면(포지션 0) 표식이 즉시 소멸합니다.
+  또한 <code>bornInFlush</code> 사이클은 전 구간 시간 게이트가 ×2가 됩니다.</p>
+
+  <div class="callout c-dead">
+    <b>현재 꺼져 있는 게이트</b>
+    <p><code>USE_NIGHT_LOCK = false</code> (8시락) · <code>USE_DD_GUARD = false</code> (DD 가드) ·
+    <code>UseDdmDistance = false</code> (DDM 거리 확대 — v5.5.0에서 철회) ·
+    <code>LHEDGE_ARM_LOTS = 1.73</code> (달러 모드라 <b>실행되지 않음</b>).
+    코드는 살아 있으니 켤 때 영향 범위를 먼저 확인하십시오.</p>
+  </div>
+</section>
+
+<!-- ═══ 6. 청산 6주체 ═══ -->
+<section id="s6">
+  <h2 class="sec">06 — Exit</h2>
+  <h3 class="title">청산 — 6주체</h3>
+  <p class="lede">v4.0.3은 청산 주체가 통문·전량청산 2개뿐이라 부분청산이 물리적으로 불가능했습니다.
+  v5.x는 6개이고, 각자 담당 구역이 다릅니다.</p>
+
+  <div class="grid g2">
+    <div class="card"><h6><span class="b m4">① 통문</span> 그룹 TP</h6>
+      <p><b>닫는 것</b> 한 사이드 전 다리(섬·연료 제외), 전량<br>
+      <b>목표가</b> 랏 가중평단 ± 비용인지 오프셋<br>
+      <b>방식</b> 서버 지정가 상주 — EA가 죽어도 브로커가 체결<br>
+      <b>§0</b> 오프셋에 스프레드·수수료·스왑·최소순익 10pt가 전부 포함되어, 체결 = 순익 ≥ 0이 <b>수학적으로 확정</b></p></div>
+
+    <div class="card"><h6><span class="b m1">② 셀프 그라인딩</span> 자기 사이드</h6>
+      <p><b>닫는 것</b> [수익 다리 전량 + FIFO 최고참 손실들] 묶음<br>
+      <b>발동</b> 4시간 경과 <b>∨ 만재 즉시</b><br>
+      <b>방식</b> 레이어 통째, 시장가 일괄. <b>부분청산 없음</b><br>
+      <b>순서</b> 손실 먼저 → 연료 나중 (연료를 먼저 닫으면 남은 손실이 악화에 노출, 실측 $0.39 불리)</p></div>
+
+    <div class="card"><h6><span class="b m2">③ XGrind</span> 교차</h6>
+      <p><b>닫는 것</b> 연료측 전량 + 타깃측 최고참 청크(0.01, L8+ 0.02)<br>
+      <b>발동</b> 물린 사이드에 자기 연료가 없을 때 반대편 무장<br>
+      <b>안전</b> 연료 유출 방지 <b>6겹</b>. 연료가 사라지면 <b>타깃을 건드리지 않고 무장만 해제</b></p></div>
+
+    <div class="card"><h6><span class="b m5">④ OVERCAP-D</span> L13+ 전용</h6>
+      <p><b>닫는 것</b> L13+ 리필 다리만<br>
+      <b>방식</b> 0.05랏 청크 <b>부분청산</b> (유일)<br>
+      <b>잔여 처리</b> <code>remain − chunk &lt; 최소랏</code>이면 전량 전환<br>
+      <b>주의</b> 약수익 기준 하향은 <b>명시적으로 거부</b>됨 — "목표치 낮춤"은 청크 크기 얘기였지 수익 기준이 아님</p></div>
+
+    <div class="card"><h6><span class="b m3">⑤ 레이어헷징 111</span> 4개 출구</h6>
+      <p><b>돌려깎기</b> 최고참 손실 1개 ↔ 그 방향 순기여 연료 N개, 라운드당 1발<br>
+      <b>Fire</b> 헷지 전량 → 그 이익이 덮는 만큼 본대 최고참 연쇄<br>
+      <b>콤보</b> 헷지 전량 + 물린측 수익 다리 전부 (손실 셀만 잔류)<br>
+      <b>편입</b> 통문 TP를 밀어 초과수익으로 헷지 손실을 덮음</p></div>
+
+    <div class="card"><h6><span class="b m6">⑥ 주말락 999</span> 갭 방어</h6>
+      <p><b>금요 23:25(서버)</b> 당일 실현이 부동손실의 5배 이상이면 <b>전량 정리</b>, 아니면 순노출 절반을 헷지로 덮고 <b>섬 격리</b><br>
+      <b>섬</b> TP를 0으로 지움 → 갭에 체결되지 않음<br>
+      <b>월 08:45(KST)</b> 999 손익 &lt; $800 이면 해제, 이상이면 합동 감량(SHAVE)</p></div>
+  </div>
+
+  <h4>상황 → 담당 주체</h4>
+  <table>
+    <thead><tr><th>상황</th><th>통문</th><th>셀프</th><th>XGrind</th><th>OVERCAP</th><th>헷징</th><th>주말락</th></tr></thead>
+    <tbody>
+      <tr><td>평시 소폭 수익</td><td><b>◎</b></td><td>·</td><td>·</td><td>·</td><td>·</td><td>·</td></tr>
+      <tr><td>한쪽 물림 (자기 연료 있음)</td><td>○</td><td><b>◎</b></td><td>·</td><td>○</td><td>○</td><td>·</td></tr>
+      <tr><td>한쪽 물림 (자기 연료 없음)</td><td>○</td><td>·</td><td><b>◎</b></td><td>○</td><td><b>◎</b></td><td>·</td></tr>
+      <tr><td><b>양측 다 물림</b></td><td>○</td><td>○</td><td><span class="b no">정지</span></td><td>○</td><td><b>◎</b> 돌려깎기</td><td>·</td></tr>
+      <tr><td>캡 만재</td><td>○</td><td><b>◎</b></td><td><b>◎</b></td><td><b>◎</b></td><td><b>◎</b></td><td>·</td></tr>
+      <tr><td>위기 (회랑 하한 활성)</td><td>○</td><td>○</td><td>○</td><td>○</td><td><b>돌려깎기만</b><br><span style="color:var(--ink3);font-size:12px">Fire·콤보·잔존 보류</span></td><td>·</td></tr>
+      <tr><td>금요 마감</td><td>·</td><td>·</td><td>·</td><td>·</td><td>·</td><td><b>◎</b></td></tr>
+      <tr><td>폐장 중 TP 도달</td><td><b>◎</b> 서버TP</td><td><span class="b no">차단</span></td><td><span class="b no">차단</span></td><td><span class="b no">차단</span></td><td><span class="b no">차단</span></td><td>·</td></tr>
+    </tbody>
+  </table>
+  <p style="color:var(--ink3);font-size:13.5px">◎ 주 담당 · ○ 보조 · · 해당 없음</p>
+
+  <div class="callout c-warn">
+    <b>양측 다 물리면 XGrind가 정지합니다</b>
+    <p>양쪽 다 물렸거나 양쪽 다 멀쩡하면 확장TP를 유지할 이유가 없어 <b>양쪽 무장을 해제</b>합니다.
+    이 국면에서 유일하게 작동하는 소각기는 <b>돌려깎기(EXITPLAN)</b>입니다 — 매직·방향 무관으로
+    최고참 손실 1개와 그 방향 순기여 연료를 묶기 때문입니다.</p>
+  </div>
+
+  <h4>충돌 방지 5겹</h4>
+  <p>두 기계가 같은 포지션을 동시에 닫으려 할 때:</p>
+  <div class="grid g5">
+    <div class="tile"><div class="lbl">1겹</div><div class="val sm">단일 owner</div><div class="note">골 진행 중엔 타 기계가 예약 자체를 못 얻음</div></div>
+    <div class="tile"><div class="lbl">2겹</div><div class="val sm">티켓 예약</div><div class="note">예약된 티켓은 남의 대상 선정에서 제외 (10곳)</div></div>
+    <div class="tile"><div class="lbl">3겹</div><div class="val sm">선점 규칙</div><div class="note">셀프 ↔ XGrind 상호 배제. 먼저 자격을 얻은 쪽이 선점</div></div>
+    <div class="tile"><div class="lbl">4겹</div><div class="val sm">쿨다운 분리</div><div class="note">기계마다 전용 타이머 — 하나가 발사해도 나머지가 굶지 않음</div></div>
+    <div class="tile"><div class="lbl">5겹</div><div class="val sm">멱등 확인</div><div class="note">응답 유실 시 티켓 재조회·볼륨 감소로 성공 판정</div></div>
+  </div>
+
+  <h4>GX 시소 보존 — 무엇을 지키나</h4>
+  <div class="callout c-law">
+    <b>보존하는 것은 손익이 아니라 랏(수량) 비율입니다</b>
+    <p>손익은 <b>방향 지정</b>에만 씁니다 — 부동손실이 큰 쪽이 "위험측".
+    실제 보존 대상은 둘 다 랏입니다: <b>①</b> 단독 수확형은 사이드 소진율 <code>≤ 33%</code>,
+    <b>②</b> 발사 후 상쇄측 잔존랏 ÷ 위험측 잔존랏 <code>≥ C_min</code>.</p>
+    <p><code>C_min</code>은 위기 심도 연동 0 / 0.20 / 0.30 / 0.40이고, <b>주말락 창에서는 0.40 강제</b>입니다.
+    이미 하한 미달이면 "개선 방향만 허용"(악화 금지)이지 절대치를 강요하지 않습니다.</p>
+    <p style="color:var(--ink3);font-size:13px">거부는 항상 <b>양보·다음 틱 재평가</b>이지 손절이 아닙니다. 해결사(777)는 이 게이트를 면제받습니다.</p>
+  </div>
+</section>
+
+<!-- ═══ 7. 레이어헷징 ═══ -->
+<section id="s7">
+  <h2 class="sec">07 — Layer Hedging</h2>
+  <h3 class="title">레이어헷징 전 생애</h3>
+  <p class="lede">7/31에 발동 축을 <b>랏 기준에서 달러 심도 기준으로</b> 교체했습니다. 아래는 현행 라이브 기준입니다.</p>
+
+  <figure>
+  <svg viewBox="0 0 1120 330" role="img" aria-label="레이어헷징 발동에서 종료까지 상태 전이">
+    <defs>
+      <marker id="a2" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+        <path d="M0,0 L9,4.5 L0,9 z" fill="#8b8a80"/></marker>
+      <marker id="a3" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+        <path d="M0,0 L9,4.5 L0,9 z" fill="#199e70"/></marker>
+    </defs>
+    <g class="svgt">
+      <!-- 5개 상태 -->
+      <rect x="24" y="86" width="150" height="86" rx="11" fill="#232321" stroke="#33322e"/>
+      <text x="40" y="114" fill="#f4f3ee" font-size="16" font-weight="700">비활성</text>
+      <text x="40" y="136" fill="#8b8a80" font-size="11" class="svgm">!active</text>
+      <text x="40" y="153" fill="#8b8a80" font-size="11" class="svgm">각인 대기</text>
+
+      <rect x="238" y="86" width="150" height="86" rx="11" fill="#232321" stroke="#c9850077"/>
+      <text x="254" y="114" fill="#c98500" font-size="16" font-weight="700">무장 (arm)</text>
+      <text x="254" y="136" fill="#8b8a80" font-size="11" class="svgm">스냅샷 촬영</text>
+      <text x="254" y="153" fill="#8b8a80" font-size="11" class="svgm">armPrice 각인</text>
+
+      <rect x="452" y="86" width="150" height="86" rx="11" fill="#232321" stroke="#3987e577"/>
+      <text x="468" y="114" fill="#3987e5" font-size="16" font-weight="700">전개</text>
+      <text x="468" y="136" fill="#8b8a80" font-size="11" class="svgm">앵커 1장 시장가</text>
+      <text x="468" y="153" fill="#8b8a80" font-size="11" class="svgm">+ 가상 사다리 8</text>
+
+      <rect x="666" y="86" width="150" height="86" rx="11" fill="#232321" stroke="#d9592677"/>
+      <text x="682" y="114" fill="#d95926" font-size="16" font-weight="700">발사</text>
+      <text x="682" y="136" fill="#8b8a80" font-size="11" class="svgm">헷지 전량 청산</text>
+      <text x="682" y="153" fill="#8b8a80" font-size="11" class="svgm">→ 본대 연쇄 소각</text>
+
+      <rect x="880" y="86" width="150" height="86" rx="11" fill="#232321" stroke="#199e7077"/>
+      <text x="896" y="114" fill="#199e70" font-size="16" font-weight="700">종료</text>
+      <text x="896" y="136" fill="#8b8a80" font-size="11" class="svgm">done: 제거 ≥ 50%</text>
+      <text x="896" y="153" fill="#8b8a80" font-size="11" class="svgm">reset: 물린측 0</text>
+    </g>
+    <g fill="none" stroke="#8b8a80" stroke-width="1.6" marker-end="url(#a2)">
+      <path d="M174,129 L232,129"/><path d="M388,129 L446,129"/>
+      <path d="M602,129 L660,129"/><path d="M816,129 L874,129"/>
+    </g>
+    <!-- 되돌아가는 -->
+    <g fill="none" stroke="#199e70" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#a3)">
+      <path d="M700,180 C700,225 560,232 528,182"/>
+    </g>
+    <g class="svgm" font-size="11">
+      <text x="182" y="76" fill="#c3c2b7">부동 ≤ −$6,000</text>
+      <text x="182" y="60" fill="#8b8a80">× 복리배수</text>
+      <text x="396" y="76" fill="#c3c2b7">2시간 대기</text>
+      <text x="396" y="60" fill="#8b8a80">+ 9중 게이트</text>
+      <text x="610" y="76" fill="#c3c2b7">avail ≥ $500</text>
+      <text x="610" y="60" fill="#8b8a80">20초 주기 검사</text>
+      <text x="824" y="76" fill="#c3c2b7">제거 − 회전</text>
+      <text x="824" y="60" fill="#8b8a80">≥ 스냅 × 0.50</text>
+      <text x="556" y="252" fill="#199e70">재전개 — 2시간 후 다시 판단 (전 구간 2h 통일)</text>
+    </g>
+    <!-- 해제선 밴드 -->
+    <g class="svgt">
+      <rect x="24" y="266" width="1072" height="46" rx="10" fill="#c9850012" stroke="#c9850044"/>
+      <text x="44" y="285" fill="#c98500" font-size="11.5" class="svgm" letter-spacing="1.2">해제선 −$5,000 — 4지점에서 동일 판정</text>
+      <text x="44" y="303" fill="#c3c2b7" font-size="12.5">① 무장 전 각인 소거 &nbsp;·&nbsp; ② 레스큐 동반 진입 &nbsp;·&nbsp; ③ 가상 레벨 터치 &nbsp;·&nbsp; ④ 새 세트 전개 &nbsp;&nbsp;<tspan fill="#8b8a80">— 전부 "이번만 스킵", 기존 방패는 강제 청산하지 않습니다</tspan></text>
+    </g>
+  </svg>
+  </figure>
+
+  <h4>발동 4단 — WAIT가 0이면 실효 2단</h4>
+<pre><b>if</b>(flU &gt;= -relU)  { l11Time = 0; <b>continue</b>; }        <i>① 해제선 위 → 각인 소거</i>
+<b>if</b>(flU &lt;= -thrU && l11Time == 0) l11Time = now;   <i>② 임계 도달 → 각인</i>
+<b>if</b>(now - l11Time &lt; WAIT*60) <b>continue</b>;              <i>③ WAIT=0 이므로 항상 통과</i>
+<b>if</b>(flU &gt; -thrU) <b>continue</b>;                           <i>④ 재확인 — GV 복원 이월분에만 실효</i>
+LHEDGE_Arm(sd);</pre>
+  <p><code>ARM_WAIT_MIN = 0</code>인 이유는 <b>이중 지연 제거</b>입니다 — 재확인은 기존 "첫 전개 2시간 대기"가 이미 담당합니다.
+  단 <code>−$5,000 ~ −$6,000</code> 구간은 <b>무각인 대기</b>(히스테리시스 밴드)로, 아무 일도 일어나지 않습니다.</p>
+
+  <h4>상수 요약</h4>
+  <div class="grid g4">
+    <div class="tile"><div class="lbl">발동 / 해제</div><div class="val sm">−$6,000 / −$5,000</div><div class="note">잔고 성장에 비례해 함께 커짐</div></div>
+    <div class="tile"><div class="lbl">전개 리듬</div><div class="val sm">2h · 2h · 2h</div><div class="note">조기폭 2노브 전부 0 = 우회 없는 순수 사다리</div></div>
+    <div class="tile"><div class="lbl">노출 상한</div><div class="val sm">스냅 × 0.70</div><div class="note">스냅은 리필 편입으로 커지는 래칫 구조</div></div>
+    <div class="tile"><div class="lbl">회랑 하한</div><div class="val sm">0.25 / 0.375 / 0.50</div><div class="note">위기 1/2/3단계. 평시 0 = 무력</div></div>
+  </div>
+
+  <h5>전개 9중 게이트 (순서대로)</h5>
+  <p>되돌림 래치(30%↑ 금지 / 20%↓ 해제) → 깊이 단독($500 미만 스킵) → 쿨다운(2h) →
+  <b>해제선</b> → 재전개 한도(무제한) → 노출캡(0.70) → 비율 정격(0.50) → 시장 가드 → 장·금요일.
+  하나라도 걸리면 그 판단은 스킵되고 <b>2시간 뒤 다시 결정</b>합니다.</p>
+
+  <div class="callout c-warn">
+    <b>위기 중에 Fire가 보류되면 그동안 무슨 일이</b>
+    <p>멈추는 것은 <b>헷지 전량 청산</b>이 공통분모인 셋 — Fire · 콤보 · 잔존 출구입니다.
+    이유는 실측입니다: <b>7회 세우고 7회 벗겨졌습니다.</b></p>
+    <p>계속 도는 것: <b>돌려깎기</b>(부분 절단이 담당) · <b>전개·레스큐</b>(회랑은 출구 전용이라 위기 중엔 방패가 계속 두꺼워짐) ·
+    통문 편입 · 백업 STOP 정비. 위기가 풀리면 다음 20초 검사에서 자동 복귀합니다.</p>
+  </div>
+</section>
+
+<!-- ═══ 8. 보조 장치 ═══ -->
+<section id="s8">
+  <h2 class="sec">08 — Support</h2>
+  <h3 class="title">보조 장치 4종</h3>
+
+  <div class="grid g2">
+    <div class="card"><h6><span class="b m3">555</span> 프로핏메이커 — 러쉬 / 부스터</h6>
+      <p><b>왜 별개인가</b> 본대는 14축 AND 게이트인데 PM은 <b>4축뿐</b>(running · !softClose · !licStopped · !remoteStop).
+      즉 본대가 침묵 중인 구간에도 수동으로 돌리는 별도 엔진입니다.<br><br>
+      <b>목표</b> 일 시작 잔고 × 0.4% (최소 $200 보장, 복리)<br>
+      <b>사다리</b> 본대 테이블 상속 — 고유값은 고아 TP $0.5 하나뿐<br>
+      <b>3상태</b> 가동 → Stop → 종료중 → 재클릭 시 <b>재개</b><br>
+      <span style="color:var(--ink3);font-size:12.5px">수동 STOP이면 같은 판 이어감 / 목표 달성했거나 목표 미상이면 새 판 (무한 부스터 방지)</span></p></div>
+
+    <div class="card"><h6><span class="b m5">777</span> 해결사 — 수동 개입</h6>
+      <p><b>무엇을</b> 손실 중 <b>현재가에서 가장 먼</b> 다리 1개(777 제외 전 매직 대상)를 신규 진입과 묶어 합산 평단에서 동반청산<br><br>
+      <b>화력</b> 사다리 10층 상당 고정 = 0.35 × 복리배수 (대상이 몇 층이든 무관)<br>
+      <b>한도</b> 본대 사이클 1개당 4회<br>
+      <b>잠김은 설계입니다</b> — 사이드에 2그룹이 동시에 살면 합산 평단이 서로 오염됩니다. 확장(T3/T4)이라는 정식 출구가 따로 있습니다.</p></div>
+
+    <div class="card"><h6><span class="b m4">DDM</span> 위기 심도계</h6>
+      <p>일중 고·저 대비 폭주 거리($)로 0~3단계 판정. 발동 50/80/110 → 해제 35/60/85 (히스테리시스, 최소 30분 유지).<br><br>
+      <b>현재 소비처는 위기 판정뿐입니다</b> — 거리 확대는 v5.5.0에서 철회됐고, 랏 감축은 랏스텝 0.01에서 표현 불가로 폐기됐습니다.<br>
+      자정에 0으로 리셋되는 맹점이 있어, 헷징은 <code>armPrice</code> 대비 악화($10/$20/$30)로 만든 <b>캠페인 심도</b>와 max로 합성합니다.</p></div>
+
+    <div class="card"><h6><span class="b m2">§16</span> 서버 안전 — 브로커 제재 방어</h6>
+      <p>배경: VT Markets read-only 제재. 마진레벨 125,124%였으니 자금 문제가 아니라 <b>연결 안 된 구간의 반복 주문</b>이 진범이었습니다.<br><br>
+      <b>연결 게이트</b> 연결 · 알고허용 · 계좌EA허용 · 심볼 FULL 4축<br>
+      <b>총량</b> 최소 간격 300ms, 10초당 20건 (32칸 링버퍼)<br>
+      <b>물리불가 9종</b> 자금부족 · 폐장 · 거래금지 · 잘못된 볼륨/가격/스톱 · 연결끊김 · <b>요청과다</b> → 재시도 즉시 중단 + 60초 쿨다운<br>
+      <span style="color:var(--ink3);font-size:12.5px">원칙: 막히면 <b>버리지 말고 다음 틱에 재평가</b>. drop이 아니라 defer.</span></p></div>
+  </div>
+
+  <h4>재시작 복원 — 매직별 무엇으로 살아나나</h4>
+  <table>
+    <thead><tr><th>매직</th><th>복원 소스</th><th>복원되는 것</th><th>복원 안 되는 것</th></tr></thead>
+    <tbody>
+      <tr><td><b>202604</b></td><td>포지션 스캔 100%</td><td>층수 · 사이클ID · 직전 체결가/시각 · base 역산 · 사이클 시작시각(그라인딩 4h 시계)</td><td>XGrind 무장 · 그라인딩 상태 · <b>FLUSH 관문 표식</b></td></tr>
+      <tr><td><b>555</b></td><td>GV 4키 + 스캔</td><td>가동 여부 · 종료중 · 판 시작시각 · 판 목표</td><td>GV 없으면 소프트 마감으로 안전 착지</td></tr>
+      <tr><td><b>777</b></td><td>코멘트 파싱 + <b>실물 재조준</b></td><td>tier · 티켓 · 진입가. 대상은 저장 안 하고 <b>다시 찾습니다</b></td><td>—<span style="color:var(--ink3)"> (재조준 자체가 검증)</span></td></tr>
+      <tr><td><b>111</b></td><td>GV 정본</td><td>활성 · 스냅샷 배열 전량 · armPrice · 전개 횟수 · 가상 마스크</td><td>스냅 결손이면 <b>캠페인 폐기</b>(유령 done 방지)</td></tr>
+      <tr><td><b>999</b></td><td>GV + 죽은 티켓 드롭</td><td>상태 · T0 · 섬 티켓 배열</td><td>티켓 0 + 헷지불요면 자동 OFF</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout c-note">
+    <b>"화면은 정상인데 진입이 안 된다"의 정체</b>
+    <p>대시보드 상태 판정이 <code>ServerReady()</code>를 포함하지 않아, 알고트레이딩이 꺼져 있어도 화면은 MINING으로 보였습니다.
+    7/30 패치로 <b>NO LINK / ALGO OFF</b>가 최우선 빨강으로, <b>RESUME</b>이 앰버 카운트다운으로 올라왔습니다.
+    카운트다운이 0이 되어도 안 풀리면 잔여 차단사유(<code>stale</code> / <code>spread</code> / <code>atr</code> …)가 그 자리에 표시됩니다.</p>
+    <p>차단 사유 로그도 7축이 추가됐습니다 — <code>NOLINK · ALGOOFF · LIC · LICSTOP · REMOTE · FORCECLOSED</code>, 그리고 어느 것도 아니면 <code>(사유미상)</code>.
+    이전엔 사유가 빈칸으로 나가서 침묵 차단이었습니다.</p>
+  </div>
+</section>
+
+<!-- ═══ 9. 상황별 분기 ═══ -->
+<section id="s9">
+  <h2 class="sec">09 — Scenarios</h2>
+  <h3 class="title">상황별 분기 — 이럴 땐 어떻게 되나</h3>
+
+  <details open><summary>가격이 다음 층에 닿았는데 시간이 안 찼다</summary><div class="body">
+    <p><b>대기합니다.</b> 매 틱 재평가되어 시간이 차는 순간 <b>그 시점 가격</b>으로 들어갑니다.
+    그 사이 가격이 더 갔으면 더 좋은 자리, 되돌아왔으면 거리 미달로 다시 대기입니다.
+    설계 의도가 코드 주석에 명시되어 있습니다 — "대기 중 가격이 되돌아오면 그룹 TP로 자연 청산 / 더 역행하면 시간 만료 후 진입 강행".</p>
+  </div></details>
+
+  <details><summary>캡에 걸렸는데 가격이 계속 간다</summary><div class="body">
+    <p><b>1단계</b> 여유가 최소랏 이상 남았으면 랏만 축소해 <b>정확히 캡에 착지</b>합니다. 이 다리는 들어갑니다.<br>
+    <b>2단계</b> 그 후로는 매 틱 조용히 스킵 — 가격이 아무리 가도 다리는 안 늘어납니다.<br>
+    <b>3단계</b> 동시에 고정구역(노출 ≥ 2.28)에 진입해 다음 다리는 0.22 고정 + <b>2시간 쿨다운</b>이 됩니다.<br>
+    <b>4단계</b> room을 만드는 건 청산 계통입니다. 소각으로 열리면 <b>원래 층 번호로</b> 재진입합니다.</p>
+  </div></details>
+
+  <details><summary>반대 방향이 이미 물려 있는데 신규 진입 요청</summary><div class="body">
+    <p><b>기본은 허용</b>입니다. 캡이 방향별로 독립이라 반대편 물림은 이쪽 여유에 영향이 없습니다.</p>
+    <p>제어는 세 가지로 들어갑니다 — 드리프트 원웨이(추세 역방향 신규만 차단) · <b>FLUSH 관문</b>(신규는 열리되 L5에서 정지) ·
+    레이어헷징 각인(물린측 노출이 선을 넘으면 방패 발동 기산).</p>
+    <p style="color:var(--ink3);font-size:13px">"반대편이 물렸으니 이쪽을 막는다"는 전면 게이트는 v5.5.0에서 <b>삭제됐습니다.</b>
+    라이브 7/14에 교착이 났기 때문입니다 — BUY가 물리자 SELL 신규가 18시간 40분간 0건이 되어 XGrind 연료가 고갈됐습니다.</p>
+  </div></details>
+
+  <details><summary>폐장 직전 / 프리틱</summary><div class="body">
+    <p><b>진입</b> 거래시간 밖이면 <code>canTrade=false</code>로 신규·증차 정지, 수익 포지션만 정리합니다.
+    마감 120분(드리프트 중이면 180분) 전부터는 마감창 플래그가 켜집니다.</p>
+    <p><b>청산</b> 세션 게이트가 EA 주도 청산을 전부 막습니다. 단 <b>통문은 서버 지정가로 상주</b>하므로 브로커가 체결합니다.</p>
+    <p><b>주말 갭</b> 2시간 이상 무틱이면 SafeResume이 재발동해 15초 + 5항목 검사를 통과해야 재개합니다.
+    주말락 재진입 시에는 <b>금요일에 세운 계획을 전부 파기</b>합니다 — 낡은 계획이 월요일 첫 프리틱에 발사되어
+    59초간 594회 재시도 폭풍이 났던 사고 대응입니다.</p>
+  </div></details>
+
+  <details><summary>재시작 직후 (기존 포지션 있음)</summary><div class="body">
+    <p>본대는 포지션 스캔으로 층수·기준가·<b>직전 체결시각</b>까지 복원합니다(시간게이트 무풍 봉합).
+    base는 복리 주입을 막기 위해 <code>GetActiveLot()</code>이 아니라 <b>테이블 역산</b>으로 구합니다.</p>
+    <p><b>주의</b> <code>bornInFlush</code> 표식은 복원되지 않습니다 — 재시작하면 FLUSH 관문이 풀립니다.
+    XGrind 무장과 그라인딩 상태도 리셋됩니다.</p>
+  </div></details>
+
+  <details><summary>MT5 업데이트 후 재시작 / 타임프레임 변경</summary><div class="body">
+    <p><b>알고트레이딩 OFF</b> → <code>ServerReady()</code> 실패 → 화면 <b>ALGO OFF 빨강</b>, 로그 <code>ALGOOFF</code>.
+    터미널에서 버튼을 켜면 다음 틱에 자동 재개됩니다(별도 리셋 불요).</p>
+    <p><b>타임프레임 변경</b> = OnInit 재실행 → GV 복원 + 포지션 스캔으로 상태는 보존되지만
+    <b>SafeResume 15초 홀드</b>가 걸립니다. 화면에 <code>RESUME -15s</code> 앰버로 표시됩니다.</p>
+    <p><b>폐장 중 재시작</b>이면 틱이 없어 1초 타이머로 부팅하고, 재개 검사는 <code>stale</code>에 걸려
+    15초가 지나도 안 풀립니다. 이건 정상 동작입니다.</p>
+  </div></details>
+
+  <details><summary>강제청산(CLOSE ALL)을 눌렀다</summary><div class="body">
+    <p>1차 클릭은 <b>무장</b>(4초), 4초 내 2차 클릭에서 전량 청산 + <b>정지 래치</b>가 걸립니다.
+    청산만 하면 다음 틱에 마틴이 새 사이클을 열어 청산이 무의미해지기 때문입니다.</p>
+    <p>래치 중에는 OnTick 최상단에서 전 로직이 차단되고 2초 주기 잔여 재청산만 돕니다.
+    PM은 GV까지 삭제되어 <b>재적용해도 부활하지 않습니다.</b> <b>해제는 EA 재적용뿐입니다</b> — 해제 코드가 파일에 존재하지 않습니다.</p>
+  </div></details>
+
+  <details><summary>라이선스가 운용 중 만료됐다</summary><div class="body">
+    <p>5초 주기 타이머가 재시작 없이 즉시 잡아 신규·증차를 동결합니다.
+    <b>기존 포지션의 청산·TP 관리는 계속됩니다.</b> 화면은 전 버튼을 숨기고 "운영 정지 / 기존 포지션은 정상 관리됩니다" 오버레이를 띄웁니다.</p>
+    <p>참고 — <code>remotePause</code>는 <b>신규만</b> 차단하고 PM·해결사·증차는 그대로 돕니다.
+    <code>remoteStop</code>·<code>licStopped</code>는 신규 + 증차 + PM까지 동결합니다.</p>
+  </div></details>
+</section>
+
+<!-- ═══ 10. 불일치 ═══ -->
+<section id="s10">
+  <h2 class="sec">10 — Caveats</h2>
+  <h3 class="title">주의 — 주석과 코드가 다른 곳</h3>
+  <p class="lede">아래는 코드 주석이 <b>구값 그대로 남아 있는</b> 지점입니다.
+  주석을 믿고 문서나 수정에 옮기면 틀립니다. <b>상수 정의 라인이 정본</b>입니다.</p>
+
+  <table>
+    <thead><tr><th>위치</th><th>주석이 말하는 것</th><th>실제 값</th></tr></thead>
+    <tbody>
+      <tr><td><code>GetProgressiveMultiplier</code> 행 끝</td><td><code>// [v3.0.7] 8.3</code> / <code>// 10.0</code></td><td><b>5.3 / 3.3</b> (7/31 개정)</td></tr>
+      <tr><td><code>CycleLotBudget</code> 헤더</td><td>"base 0.01 기준 <b>2.78</b>랏"</td><td><b>1.95</b> (F6 테이블 합)</td></tr>
+      <tr><td><code>GM_FixedThresh</code></td><td>"L1~L11 합, base0.01시 <b>2.12</b>"</td><td><b>2.28</b> (2.5 − 0.22). 설명도 부정확</td></tr>
+      <tr><td><code>canOpenNew</code> 주석</td><td>"DM_FLUSH 게이트 <b>유지</b>"</td><td>조건식에 <b>DM_FLUSH 항 없음</b> — 관문이 대체</td></tr>
+      <tr><td><code>LHEDGE_RatioFloor</code></td><td>"1/2/3단계 = 0.20 / 0.30 / <b>0.40</b>"</td><td><b>0.25 / 0.375 / 0.50</b> (상한 0.40→0.50 개정 반영 안 됨)</td></tr>
+      <tr><td>EI 주석</td><td>"8h 창"</td><td><b>4시간</b></td></tr>
+    </tbody>
+  </table>
+
+  <h4>사문(死文) — 정의는 있으나 실행되지 않는 것</h4>
+  <table>
+    <thead><tr><th>심볼</th><th>상태</th><th>이유</th></tr></thead>
+    <tbody>
+      <tr><td><code>LHEDGE_ARM_LOTS = 1.73</code></td><td><span class="b no">미실행</span></td><td>유일 사용처가 <code>ARM_USD ≤ 0.005</code>로 가드됨. 실제값 6000이라 절대 통과 안 됨</td></tr>
+      <tr><td><code>BUILD_DATE</code></td><td><span class="b no">참조 0회</span></td><td>화면 표기가 폐지되어 아무 데도 안 쓰임. MQL5 <code>__DATETIME__</code>로 대체 가능</td></tr>
+      <tr><td><code>UseDdmDistance</code></td><td><span class="b off">false (const)</span></td><td>거리 ×√DDM 철회 — 변동성 대응은 ATR·급변·시간게이트가 담당</td></tr>
+      <tr><td><code>USE_DD_GUARD</code></td><td><span class="b off">false</span></td><td>켜면 F6 테이블이 아닌 <b>구 곱셈 체인</b>으로 최대층을 깎음 — 켜기 전 확인 필요</td></tr>
+      <tr><td><code>XGRIND_FUEL_HOLD</code></td><td><span class="b off">false</span></td><td>7/14 사장님 지시 — 소규모 묶음은 그냥 정상 TP</td></tr>
+      <tr><td>해결사 시간창</td><td><span class="b off">무효</span></td><td><code>IsInSolverTimeWindow()</code>가 무조건 true 반환 (락 제거). 동시진입 락만 유지</td></tr>
+      <tr><td>조기 재전개 2노브</td><td><span class="b off">0.0</span></td><td>둘 다 0이라 우회 없는 순수 2시간 사다리</td></tr>
+    </tbody>
+  </table>
+
+  <h4>미완 — 문서는 "구현 완료"인데 실물이 없는 것</h4>
+  <div class="callout c-warn">
+    <b>R3 (Sweep 실패 로그)</b>
+    <p><code>WLU_IslandTPSweep</code>이 <code>PositionModify</code> 반환값을 버리고 <b>다음 줄에서 무조건 성공 로그</b>를 찍습니다.
+    섬 TP 소거는 갭 사고 재발 방지 장치인데, 영구 실패해도 저널에는 성공만 쌓입니다. 수정은 2줄입니다.</p>
+  </div>
+  <div class="callout c-warn">
+    <b>3상태 버튼의 렌더</b>
+    <p>핸들러는 3분기로 고쳐졌지만 <b>렌더 호출은 여전히 2상태</b>입니다.
+    종료중(CLOSING)일 때 START 버튼이 꺼진 색으로 그려지는데 클릭은 정상 동작합니다 — "안 눌리는 것처럼 보이는 살아있는 버튼".
+    렌더러 자체는 이미 3상태를 지원하므로 호출 1줄만 고치면 됩니다. (앤트가드는 이미 3상태로 구현되어 있습니다)</p>
+  </div>
+
+  <hr class="rule">
+  <div class="foot">
+    <p><b>정본</b> <code>GoldMiner_v5_5_4_internal_20260730.mq5</code> (984,082 B · 18,156줄 · 2026-07-31 17:11 저장 · F7 컴파일 통과)<br>
+    <b>추출 방식</b> 진입 / 청산 / 헷징 / 보조 / 생애주기 5계통을 각각 독립 분석한 뒤 교차 검증. 모든 수치는 상수 정의 라인 직접 인용.<br>
+    <b>주의</b> 이 문서의 수치는 <b>internal 빌드 기준</b>입니다. locked·앤트가드에는 7/31 축(ARM_USD 계열 + L11 5.3)이 아직 전파되지 않았습니다.</p>
+  </div>
+</section>
+
+</div>
+</body>
+</html>
