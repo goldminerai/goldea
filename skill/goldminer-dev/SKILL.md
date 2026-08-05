@@ -30,10 +30,10 @@ description: MOMANTIC GoldMiner 5.5.x 메인 엔진 개발·유지보수 전용 
 3. git commit (메시지에 라운드 요지) — 푸시는 GitHub Desktop [Publish/Push]
 4. 진행 스냅샷(아래) 갱신 — 다음 세션이 여기서 재개한다
 
-## 진행 스냅샷 (2026-08-05 r8 — 갱신할 것)
+## 진행 스냅샷 (2026-08-05 r9 — 갱신할 것)
 - 마스터: `src/mt5/GoldMiner_v5_5_5_internal_20260805.mq5` (r8, 벤티지 컴파일 0/0)
 - 8/5 확정 반영: A2 · T-RE(18h=물림 나이·매직 무관) · P1(+집행부 대칭·회랑 존중) · FAR(UseFarTarget) · R1(gTP 기통과 정리)
   · E1/F1(★백테스트 미검증★) · **VT 수리 V1~V9**(ServerReady 5축·CRUSH §16·전 Modify 계수·미아 가드·PM 이식·수익청산 쿨·솔버 터미널 전면·주요 청산 계수·비터미널 150ms 중앙 간격 — 사장님 위임 "로직 무이슈면 적용" 하에 적용)
-- V8 잔여(2차분·재판단 대상): LHEDGE Fire/CloseAllHedge/PlanExecute/MergeUpdate·WLU 계열 MarkSent 계수화, 원자 묶음 내부 per-leg CanSendOrder 게이트(집행 원자성 이슈), FLATCUT §16 게이트(주말 노출 위험 — 완주 우선 판단으로 미적용)
+- W-ICE(주말락 개편 — 금요 컷 폐지·락 시 전 TP 제거+펜딩 삭제·완전 얼음 WLU_Frozen 11게이트·해빙 후 통문 재부여) · V8b(헷지 계열 계수 완결 — Fire·CloseAllHedge·MERGE·돌려깎기) 반영. 총량 캡은 유지 확정(defer 원칙, OrderMaxPer10s 인풋으로 브로커별 조절)
 - 대기: ①A/B 백테스트(세트 준비됨) ②locked 소성 ③앤트가드 전파 ④VT 저널 지문 확인 후 재가동
 - 미결 논점: F1 수리 범위, FAR 집행부 동조, E1×편입예산(mo), C1 위기 모집단 111 포함 여부
