@@ -23,6 +23,16 @@ description: MOMANTIC GoldMiner 5.5.x 메인 엔진 개발·유지보수 전용 
 - ServerReady는 5축이어야 함(`ACCOUNT_TRADE_ALLOWED` 포함) — read-only 제재 중 노크가 재제재를 부른다.
 - 감사 전문·수리 권고 9종·저널 판별 지문: `upgrade/backtest_20260805/VT_서버트래픽_감사_20260805.md`
 
+## ★불가분 조합 규율 (2026-08-05 백테스트 5런 실증)
+- **E1(`UseGTPImmediate`) ↔ F1(`UseGTPPriority`)는 세트다. 항상 같이 ON / 같이 OFF.**
+  E1만 켜면 확장TP가 연료를 잠근 채 통째청산이 발사돼 **출구 봉쇄 → 계좌 폭발**(5/15 마진 12%, 통문 282회 최저).
+  프리셋 편집·현장 배포 시 이 조합을 반드시 검사할 것. 금지: `UseGTPImmediate=true` + `UseGTPPriority=false`.
+- **C1(`UseCrisisOnlyGrind`)은 급락 창에서 열세** — 부분절단 억제가 노출을 안고 가 낙폭 심화. 현장 기본 OFF.
+- 현장 배포 프리셋 정본: `upgrade/backtest_20260805/GM555_FIELD_20260805.set` (버그수리 ON / 행동변경 OFF)
+- 판정 근거 전문: `upgrade/backtest_20260805/AB판정_5런_종합_20260805.md`
+- **백테스트 판독 함정**: 매 런의 마지막 날 폭락은 **시험 종료 강제청산**이다(창을 늘리면 정상 상승으로 바뀜).
+  EqDD·마진레벨도 이에 오염되므로, 신뢰 축은 **종료 전날까지의 잔액 추이**와 **중간 폭발 여부**.
+
 ## 고도화 프로토콜 (이 스킬을 키우는 법)
 매 작업 라운드 종료 시:
 1. 새로 확정된 조문·결함 교훈을 이 SKILL.md(간결 요지) + `docs/claude-import/gold/dev-notes/`(상세)에 추가
