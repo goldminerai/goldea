@@ -30,8 +30,10 @@ description: MOMANTIC GoldMiner 5.5.x 메인 엔진 개발·유지보수 전용 
 3. git commit (메시지에 라운드 요지) — 푸시는 GitHub Desktop [Publish/Push]
 4. 진행 스냅샷(아래) 갱신 — 다음 세션이 여기서 재개한다
 
-## 진행 스냅샷 (2026-08-05 기준 — 갱신할 것)
-- 마스터: `src/mt5/GoldMiner_v5_5_5_internal_20260805.mq5` (r7, 벤티지 컴파일 0/0)
-- 8/5 확정 반영: A2(미인계 편입) · T-RE(18h=물림 나이·매직 무관) · P1(배율 청크+집행부 대칭) · FAR(타 매직 최원거리, UseFarTarget 게이트) · R1(gTP 기통과 정리) · E1/F1(통문 즉시·확장TP 해제 — ★백테스트 미검증★)
-- 대기: ①VT 수리 패키지 ①~⑨ (사장님 범위 결정 대기) ②A/B 백테스트(세트 파일 준비됨: `upgrade/backtest_20260805/`) ③locked(배포판) 소성 ④앤트가드 전파
-- 미결 논점: F1 수리 범위(확장TP 수확 무력화), FAR 집행부 동조, E1×편입예산(mo), C1 위기 모집단 111 포함 여부
+## 진행 스냅샷 (2026-08-05 r8 — 갱신할 것)
+- 마스터: `src/mt5/GoldMiner_v5_5_5_internal_20260805.mq5` (r8, 벤티지 컴파일 0/0)
+- 8/5 확정 반영: A2 · T-RE(18h=물림 나이·매직 무관) · P1(+집행부 대칭·회랑 존중) · FAR(UseFarTarget) · R1(gTP 기통과 정리)
+  · E1/F1(★백테스트 미검증★) · **VT 수리 V1~V9**(ServerReady 5축·CRUSH §16·전 Modify 계수·미아 가드·PM 이식·수익청산 쿨·솔버 터미널 전면·주요 청산 계수·비터미널 150ms 중앙 간격 — 사장님 위임 "로직 무이슈면 적용" 하에 적용)
+- V8 잔여(2차분·재판단 대상): LHEDGE Fire/CloseAllHedge/PlanExecute/MergeUpdate·WLU 계열 MarkSent 계수화, 원자 묶음 내부 per-leg CanSendOrder 게이트(집행 원자성 이슈), FLATCUT §16 게이트(주말 노출 위험 — 완주 우선 판단으로 미적용)
+- 대기: ①A/B 백테스트(세트 준비됨) ②locked 소성 ③앤트가드 전파 ④VT 저널 지문 확인 후 재가동
+- 미결 논점: F1 수리 범위, FAR 집행부 동조, E1×편입예산(mo), C1 위기 모집단 111 포함 여부
